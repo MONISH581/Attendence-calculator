@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Super Admin — Sri Shakthi Institute</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+    .dashboard-header {
+      background: linear-gradient(90deg, #0369a1 0%, #0ea5e9 60%, #38bdf8 100%);
+    }
+    .dashboard-title {
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    .dashboard-institute {
+      color: #cbd5e1;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="admin-app" class="min-h-screen">
+
+    <div class="dashboard-header shadow-2xl">
+      <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between">
+        <div class="mb-4 sm:mb-0">
+          <h1 class="dashboard-title">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+          <div class="dashboard-institute">Super Admin Panel — Manage System Administrators</div>
+        </div>
+        <a href="./admin.html" class="px-5 py-2 rounded-xl bg-white text-sky-800 font-medium shadow-lg hover:bg-gray-100 transition-all transform hover:scale-[1.01] active:scale-95">
+          ← Back to Admin
+        </a>
+      </div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <section class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-sky-700">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Create New Administrator</h2>
+          <div class="grid gap-4">
+            <input id="aname" class="border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow" placeholder="Administrator Name"/>
+            <input id="aemail" type="email" class="border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow" placeholder="Email Address"/>
+            <select id="arole" class="border border-gray-300 rounded-xl px-4 py-2.5 appearance-none bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow">
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+            <button id="addAdmin" class="mt-2 px-6 py-2.5 rounded-xl bg-sky-600 text-white font-medium shadow-md hover:bg-sky-700 transition-all transform hover:scale-[1.01] active:scale-95">
+              Create Administrator
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-sky-700">
+          <div class="flex items-center justify-between mb-4 border-b pb-2">
+            <h2 class="text-xl font-bold text-gray-800">Current Admins</h2>
+            <button id="refreshAdmins" class="px-4 py-1.5 rounded-xl border border-gray-300 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all transform active:scale-95 text-sm">
+              Refresh List
+            </button>
+          </div>
+          <div id="adminsTable" class="space-y-3 max-h-[400px] overflow-y-auto">
+            <div class="text-center text-gray-400 py-4">Loading administrators...</div>
+          </div>
+        </div>
+      </section>
+      <div id="messageBoxContainer"></div>
+    </div>
+  </div>
+
+<script>
+  // Utility: display temporary message box
+  function displayTemporaryMessage(message, type = 'blue') {
+    const container = document.getElementById('messageBoxContainer');
+    const colorClasses = {
+      'green': 'bg-green-100 border-green-400 text-green-700',
+      'red': 'bg-red-100 border-red-400 text-red-700',
+      'blue': 'bg-blue-100 border-blue-400 text-blue-700'
+    };
+    const msgEl = document.createElement('div');
+    msgEl.className = `fixed bottom-4 right-4 z-50 p-4 rounded-xl shadow-lg border-l-4 ${colorClasses[type]} transition-opacity duration-300`;
+    msgEl.textContent = message;
+    container.appendChild(msgEl);
+    setTimeout(() => {
+      msgEl.classList.add('opacity-0');
+      setTimeout(() => msgEl.remove(), 300);
+    }, 3000);
+  }
+
+  const API = (path, opts={}) => {
+    const BASE_URL = localStorage.API_BASE || "http://localhost:5000";
+    return fetch(BASE_URL + path, opts).catch(err => {
+      displayTemporaryMessage("Connection Error: Could not reach the API server.", "red");
+      throw err;
+    });
+  };
+
+  // Add Admin button
+  document.getElementById("addAdmin").onclick = async () => {
+    const createBtn = document.getElementById("addAdmin");
+    createBtn.disabled = true;
+    createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    const nameEl = document.getElementById("aname");
+    const emailEl = document.getElementById("aemail");
+    const roleEl = document.getElementById("arole");
+
+    const body = {
+      name: nameEl.value.trim(),
+      email: emailEl.value.trim(),
+      role: roleEl.value
+    };
+
+    if (!body.name || !body.email) {
+      displayTemporaryMessage("Please fill in both name and email fields.", 'red');
+      createBtn.disabled = false;
+      createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      return;
+    }
+
+    try {
+      const res = await API("/api/admins", { 
+        method:"POST", 
+        headers:{ "Content-Type":"application/json" }, 
+        body: JSON.stringify(body) 
+      });
+
+      if (res.ok) {
+        displayTemporaryMessage(`Admin ${body.name} created successfully!`, 'green');
+        nameEl.value = ''; emailEl.value = '';
+        loadAdmins();
+      } else {
+        const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+        throw new Error(`Failed to create admin: ${errorData.error || res.statusText}`);
+      }
+    } catch (error) {
+      if (error.message.includes("Failed to create admin")) {
+        displayTemporaryMessage(error.message, 'red');
+      }
+    } finally {
+      createBtn.disabled = false;
+      createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+  };
+
+  // Load admins list
+  async function loadAdmins(){
+    const box = document.getElementById("adminsTable");
+    box.innerHTML = '<div class="text-center text-gray-400 py-4">Fetching data...</div>';
+
+    try {
+      const res = await API("/api/admins");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+        throw new Error(`Failed to fetch admin list: ${errorData.error || res.statusText}`);
+      }
+
+      const data = await res.json();
+      box.innerHTML = "";
+
+      if (data.length === 0) {
+        box.innerHTML = '<div class="text-center text-gray-500 py-4">No administrators found.</div>';
+        return;
+      }
+
+      data.forEach(a => {
+        const row = document.createElement("div");
+        const roleClass = a.role === 'superadmin' ? 'bg-indigo-100 text-indigo-700 font-bold' : 'bg-sky-100 text-sky-700 font-medium';
+
+        row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow";
+        row.innerHTML = `
+          <div class="min-w-0 flex-1 pr-4">
+            <div class="font-semibold text-gray-800 truncate">${a.name}</div>
+            <div class="text-sm text-gray-500 mt-0.5">${a.email||"-"}</div>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="uppercase text-xs ${roleClass} px-3 py-1 rounded-full">${a.role}</span>
+            <button data-del="${a._id}" class="px-4 py-1.5 rounded-xl bg-red-600 text-white font-medium shadow-sm hover:bg-red-700 transition-all transform active:scale-95 text-sm whitespace-nowrap">
+              Delete
+            </button>
+          </div>`;
+
+        row.addEventListener("click", async e => {
+          const btn = e.target.closest("button[data-del]");
+          if(!btn) return;
+
+          btn.disabled = true;
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+          try {
+            const deleteRes = await API("/api/admins/"+btn.dataset.del, { method:"DELETE" });
+
+            if (deleteRes.ok) {
+              displayTemporaryMessage("Admin deleted successfully.", 'green');
+              loadAdmins();
+            } else {
+              const errorData = await deleteRes.json().catch(() => ({ error: "Unknown server error" }));
+              throw new Error(`Failed to delete admin: ${errorData.error || deleteRes.statusText}`);
+            }
+          } catch (error) {
+            if (error.message.includes("Failed to delete admin")) {
+              displayTemporaryMessage(error.message, 'red');
+            }
+          } finally {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        });
+
+        box.appendChild(row);
+      });
+    } catch (error) {
+      box.innerHTML = '<div class="text-center text-red-500 py-4">Error loading admins. Check console.</div>';
+    }
+  }
+
+  document.getElementById("refreshAdmins").onclick = loadAdmins;
+  loadAdmins();
+</script>
+</body>
+</html>

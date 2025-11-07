@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard - Sri Shakthi Institute</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f7fafc; }
+    .dashboard-header {
+      background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 60%, #6366f1 100%);
+    }
+    .dashboard-title {
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    .dashboard-institute {
+      color: #cbd5e1;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .avatar { border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; width: 70px; height: 70px; }
+    .progress-bg { stroke: #e5e7eb; }
+    .progress-bar { transition: stroke-dashoffset 0.4s ease; }
+    .progress-text { font-size: 1.7rem; fill: #2563eb; font-weight: bold; }
+    .bar-wrap { width: 100%; background: #e5e7eb; border-radius: 9999px; height: 14px; overflow: hidden; }
+    .bar-fill { width: 0%; height: 100%; border-radius: 9999px; transition: width 900ms ease; }
+    .bar-green { background: #16a34a; }
+    .bar-yellow { background: #f59e0b; }
+    .bar-orange { background: #f97316; }
+    .bar-red { background: #dc2626; }
+    .bar-label { font-weight: 700; }
+    @media (max-width: 700px) {
+      .card { max-width: 99vw; border-radius: 0.7rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-header shadow-2xl">
+    <div class="max-w-4xl mx-auto px-4 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between">
+      <div class="mb-4 sm:mb-0">
+        <h1 class="dashboard-title">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+        <div class="dashboard-institute">Student Attendance Dashboard</div>
+      </div>
+      <img src="https://ui-avatars.com/api/?name=Student&background=3b82f6&color=fff" class="avatar" alt="student-avatar"/>
+    </div>
+  </div>
+
+  <div class="flex justify-center items-center min-h-[65vh] py-4 bg-gray-100">
+    <div class="card bg-white rounded-3xl shadow-2xl max-w-2xl w-full px-6 pt-8 pb-6 sm:px-10">
+      <div class="flex flex-col sm:flex-row items-center sm:gap-8 mb-8 border-b pb-5">
+        <img src="https://ui-avatars.com/api/?name=Student&background=gray&color=222" class="avatar mb-4 sm:mb-0"/>
+        <div>
+          <h2 class="text-lg font-bold text-gray-700" id="studentName">Name</h2>
+          <p class="text-gray-500" id="studentDegree">B.E, CSE | II Year | 2025-2026</p>
+          <p class="text-base font-semibold">
+            <span id="studentRoll" class="text-black">Roll No: -</span>
+            <span class="mx-2 text-gray-400">|</span>
+            <span id="studentClass" class="text-black">Class: -</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center mb-5 gap-4">
+        <div>
+          <label class="font-semibold text-gray-700 mr-3">Select Session:</label>
+          <select id="sessionSelect" class="border rounded px-3 py-2 bg-gray-50 font-medium focus:ring-sky-500"></select>
+        </div>
+        <div>
+          <label class="font-semibold text-gray-700 mr-3">Semester:</label>
+          <select id="semesterSelect" class="border rounded px-3 py-2 bg-gray-50 font-medium focus:ring-sky-500">
+            <option value="Odd">Odd</option>
+            <option value="Even">Even</option>
+          </select>
+        </div>
+        <button id="loadDataBtn" class="px-4 py-2 rounded-xl bg-sky-600 text-white font-semibold hover:bg-sky-700">Refresh Attendance</button>
+      </div>
+
+      <div class="flex border-b mb-6 font-semibold text-gray-500">
+        <button id="tabOverall" class="pb-2 border-b-2 border-sky-400 text-sky-700">OVERALL</button>
+        <button id="tabSubjects" class="pb-2 ml-8 hover:text-sky-700">SUBJECT-WISE</button>
+        <button id="tabRecords" class="pb-2 ml-8 hover:text-sky-700">RECORDS</button>
+      </div>
+
+      <div id="dashboardContent"></div>
+    </div>
+  </div>
+
+<script>
+const sessionSelect = document.getElementById("sessionSelect");
+const semesterSelect = document.getElementById("semesterSelect");
+const loadDataBtn = document.getElementById("loadDataBtn");
+
+function populateSessions() {
+  sessionSelect.innerHTML = "";
+  const startYear = 2023;
+  const endYear = 2028;
+  for(let y = startYear; y <= endYear; y++) {
+    const option = document.createElement("option");
+    option.value = `${y}-${y+1}`;
+    option.textContent = `${y}-${y+1}`;
+    sessionSelect.appendChild(option);
+  }
+}
+
+function setDefaults() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth()+1;
+  const currentSession = `${year}-${year+1}`;
+
+  let found = Array.from(sessionSelect.options).find(opt => opt.value === currentSession);
+  sessionSelect.value = found ? currentSession : sessionSelect.options[0].value;
+
+  semesterSelect.value = (month >= 7 && month <= 12) ? "Odd" : "Even";
+}
+
+async function renderDashboard() {
+  const BASE_URL = "http://localhost:5000";
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    document.getElementById("dashboardContent").innerHTML = "<div class='text-red-500 text-center py-8'>Please login to see attendance</div>";
+    return;
+  }
+
+  const session = sessionSelect.value;
+  const semester = semesterSelect.value;
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/students/dashboard/${userId}?session=${session}&semester=${semester}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+    if (!data.overallPercentage) {
+      document.getElementById("dashboardContent").innerHTML = "<div class='text-gray-600 text-center py-8'>oki</div>";
+      return;
+    }
+
+    document.getElementById("studentName").textContent = data.name || "Student";
+    document.getElementById("studentDegree").textContent = data.degreeYearText || "B.E, CSE | II Year | 2025-2026";
+    document.getElementById("studentRoll").textContent = `Roll No: ${data.rollNo || "-"}`;
+    document.getElementById("studentClass").textContent = `Class: ${data.className || "-"}`;
+
+    const percent = data.overallPercentage || 0;
+    const presentDays = data.presentDays || 0;
+    const totalDays = data.totalDays || 0;
+    let statusText = "";
+    let statusClass = "";
+    let statusBadgeClass = "";
+    if (percent >= 75) {
+      statusText = "Eligible (>= 75%)";
+      statusClass = 'text-green-600';
+      statusBadgeClass = 'bg-green-100 text-green-800 border border-green-300';
+    } else if (percent >= 65) {
+      statusText = "Condonation Eligible (65%–74%)";
+      statusClass = 'text-amber-600';
+      statusBadgeClass = 'bg-amber-100 text-amber-800 border border-amber-300';
+    } else {
+      statusText = "Not Eligible (< 65%)";
+      statusClass = 'text-red-600';
+      statusBadgeClass = 'bg-red-100 text-red-800 border border-red-300';
+    }
+
+    function colorClass(p) {
+      if (p >= 75) return 'bar-green';
+      if (p >= 65) return 'bar-yellow';
+      return 'bar-red';
+    }
+
+    function lerpColor(c1, c2, t) {
+      const a = c1.match(/#(..)(..)(..)/).slice(1).map(x => parseInt(x,16));
+      const b = c2.match(/#(..)(..)(..)/).slice(1).map(x => parseInt(x,16));
+      const m = a.map((av,i) => Math.round(av + (b[i]-av)*t));
+      return `#${m.map(v => v.toString(16).padStart(2,'0')).join('')}`;
+    }
+
+    function barGradient(p) {
+      // return a pleasing gradient that mixes within the band
+      if (p < 60) {
+        const t = Math.max(0, p/60);
+        const from = '#dc2626'; // red
+        const to = '#f97316';   // orange
+        const mid = lerpColor(from, to, t);
+        return `linear-gradient(90deg, ${from}, ${mid})`;
+      }
+      if (p < 75) {
+        const t = (p-60)/15;
+        const from = '#f97316'; // orange
+        const to = '#f59e0b';   // amber
+        const mid = lerpColor(from, to, Math.max(0, Math.min(1, t)));
+        return `linear-gradient(90deg, ${from}, ${mid})`;
+      }
+      // safe: 75-100
+      const t = (p-75)/25;
+      const from = '#22c55e'; // green
+      const to = '#0ea5e9';   // sky/teal for more attractive look
+      const mid = lerpColor(from, to, Math.max(0, Math.min(1, t)));
+      return `linear-gradient(90deg, ${from}, ${mid})`;
+    }
+
+    function animateBars() {
+      const bars = document.querySelectorAll('[data-bar]');
+      bars.forEach(bar => {
+        const target = parseFloat(bar.getAttribute('data-target')) || 0;
+        // reset first to ensure animation from 0
+        bar.style.width = '0%';
+        bar.style.background = barGradient(target);
+        // next frame -> animate to target
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            bar.style.width = `${Math.max(0, Math.min(100, target))}%`;
+          });
+        });
+      });
+      const counters = document.querySelectorAll('[data-counter]');
+      counters.forEach(el => {
+        const target = parseFloat(el.getAttribute('data-target')) || 0;
+        let start = 0;
+        const duration = 800;
+        const startTs = performance.now();
+        function step(ts) {
+          const progress = Math.min(1, (ts - startTs) / duration);
+          const val = Math.round(start + (target - start) * progress);
+          el.textContent = `${val}%`;
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      });
+    }
+
+    function overallHTML() {
+      const cls = colorClass(percent);
+      return `
+      <div class="flex flex-col gap-4 mb-7">
+        <div class="flex flex-col">
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="text-base text-gray-700 bar-label">Overall Attendance</div>
+            <div class="text-xl font-extrabold text-gray-800" data-counter data-target="${percent}">0%</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-fill ${cls}" data-bar data-target="${percent}"></div>
+          </div>
+          <div class="mt-2">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide ${statusBadgeClass}">
+              ${statusText}
+            </span>
+          </div>
+        </div>
+        <div class="text-sm text-black">
+          <b>No. of periods present:</b> ${presentDays} / ${totalDays}
+        </div>
+      </div>`;
+    }
+
+    function subjectHTML() {
+      if (!data.perSubject || !data.perSubject.length) {
+        return `<div class="text-gray-500 pt-6 pl-1">No subject-wise attendance recorded yet.</div>`;
+      }
+      return `<div class="pt-1 flex flex-col gap-4">
+        ${data.perSubject.map(s => {
+          const cls = colorClass(s.percentage || 0);
+          return `
+            <div class="bg-gray-50 rounded-xl p-3 shadow">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm font-semibold text-gray-800">${s.subject}</div>
+                <div class="text-sm text-gray-600">${s.present}/${s.total}</div>
+              </div>
+              <div class="flex items-center justify-between mb-1">
+                <div class="w-full mr-3">
+                  <div class="bar-wrap">
+                    <div class="bar-fill ${cls}" data-bar data-target="${s.percentage}"></div>
+                  </div>
+                </div>
+                <div class="text-sm font-bold text-gray-800" data-counter data-target="${s.percentage}">0%</div>
+              </div>
+            </div>`;
+        }).join("")}
+      </div>`;
+    }
+
+    function recordsHTML() {
+      if (!data.attendance || !data.attendance.length) {
+        return `<div class="text-gray-500 pt-6 pl-1">No attendance records available.</div>`;
+      }
+      return `
+        <div class="mt-2">
+          <p class="text-md font-semibold mb-2">Attendance Records</p>
+          <div class="bg-gray-50 rounded-xl p-3 shadow">
+            <ul class="list-disc pl-5 text-gray-700 space-y-1">
+              ${data.attendance.map(a => `<li>${a.date} - ${a.status}${a.subject ? ' - ' + a.subject : ''}</li>`).join('')}
+            </ul>
+          </div>
+        </div>`;
+    }
+
+    function showOverall() {
+      document.getElementById("dashboardContent").innerHTML = overallHTML();
+      animateBars();
+    }
+    function showSubjects() {
+      document.getElementById("dashboardContent").innerHTML = subjectHTML();
+      animateBars();
+    }
+    function showRecords() {
+      document.getElementById("dashboardContent").innerHTML = recordsHTML();
+    }
+
+    document.getElementById("tabOverall").onclick = () => {
+      showOverall();
+      toggleTabs('overall');
+    };
+    document.getElementById("tabSubjects").onclick = () => {
+      showSubjects();
+      toggleTabs('subjects');
+    };
+    document.getElementById("tabRecords").onclick = () => {
+      showRecords();
+      toggleTabs('records');
+    };
+
+    function toggleTabs(active) {
+      const tabs = ["tabOverall", "tabSubjects", "tabRecords"];
+      tabs.forEach(id => {
+        const activeNow = (id === (active === 'subjects' ? 'tabSubjects' : active === 'records' ? 'tabRecords' : 'tabOverall'));
+        const el = document.getElementById(id);
+        el.classList.toggle("border-sky-400", activeNow);
+        el.classList.toggle("text-sky-700", activeNow);
+      });
+    }
+
+    showOverall();
+    toggleTabs('overall');
+  } catch(e) {
+    document.getElementById("dashboardContent").innerHTML = "<div class='text-gray-600 text-center py-8'>oki</div>";
+  }
+}
+
+loadDataBtn.onclick = () => renderDashboard();
+
+window.onload = () => {
+  populateSessions();
+  setDefaults();
+  renderDashboard();
+};
+</script>
+</body>
+</html>

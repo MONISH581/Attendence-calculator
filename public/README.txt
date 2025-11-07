@@ -1,0 +1,1 @@
+Static files served from /public. Put logos, assets here.

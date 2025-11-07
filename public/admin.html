@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — Sri Shakthi Institute</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+    }
+    .dashboard-header {
+      background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 60%, #6366f1 100%);
+    }
+    .dashboard-title {
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    .dashboard-institute {
+      color: #cbd5e1;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="admin-app" class="min-h-screen">
+    <!-- Header -->
+    <div class="dashboard-header shadow-2xl">
+      <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 flex items-center justify-between">
+        <div>
+          <h1 class="dashboard-title">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+          <div class="dashboard-institute">Admin Panel — Manage Students and Teachers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <section class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-600">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Add New Student</h2>
+          <div class="grid gap-4">
+            <input id="sname" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Student Name"/>
+            <input id="sroll" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Roll No"/>
+            <input id="sclass" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Class e.g., CSE-A"/>
+            <select id="sbatch" class="border border-gray-300 rounded-xl px-4 py-2.5">
+              <option value="">-- Select Batch Start Year --</option>
+              <option value="2025">2025 (First Year)</option>
+              <option value="2024">2024 (Second Year)</option>
+              <option value="2023">2023 (Third Year)</option>
+              <option value="2022">2022 (Fourth Year)</option>
+            </select>
+            <input id="spassword" type="text" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Student Password"/>
+            <button id="addStudent" class="mt-2 px-6 py-2.5 rounded-xl bg-green-600 text-white font-medium shadow-md hover:bg-green-700 transition-all transform hover:scale-[1.01] active:scale-95">
+              Add Student
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-indigo-600">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Add New Teacher</h2>
+          <div class="grid gap-4">
+            <input id="tname" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Teacher Name"/>
+            <input id="temail" type="email" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Email"/>
+            <input id="tpassword" type="text" class="border border-gray-300 rounded-xl px-4 py-2.5" placeholder="Teacher Password"/>
+            <button id="addTeacher" class="mt-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-medium shadow-md hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95">
+              Add Teacher
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid md:grid-cols-2 gap-8 mt-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-600">
+          <div class="flex items-center justify-between mb-4 border-b pb-2">
+            <h2 class="text-xl font-bold text-gray-800">Current Students</h2>
+            <div class="flex items-center gap-3">
+              <input id="studentSearch" class="border border-gray-300 rounded-xl px-3 py-1.5 text-sm bg-gray-50" placeholder="Search name or roll" />
+              <button id="refreshStudents" class="px-4 py-1.5 rounded-xl border border-gray-300 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all transform active:scale-95 text-sm">
+                Refresh List
+              </button>
+            </div>
+          </div>
+          <div id="studentsTable" class="space-y-3 max-h-[400px] overflow-y-auto">
+            <div class="text-center text-gray-400 py-4">Loading students...</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-indigo-600">
+          <div class="flex items-center justify-between mb-4 border-b pb-2">
+            <h2 class="text-xl font-bold text-gray-800">Current Teachers</h2>
+            <div class="flex items-center gap-3">
+              <input id="teacherSearch" class="border border-gray-300 rounded-xl px-3 py-1.5 text-sm bg-gray-50" placeholder="Search name or email" />
+              <button id="refreshTeachers" class="px-4 py-1.5 rounded-xl border border-gray-300 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all transform active:scale-95 text-sm">
+                Refresh List
+              </button>
+            </div>
+          </div>
+          <div id="teachersTable" class="space-y-3 max-h-[400px] overflow-y-auto">
+            <div class="text-center text-gray-400 py-4">Loading teachers...</div>
+          </div>
+        </div>
+      </section>
+
+      <div id="messageBoxContainer"></div>
+    </div>
+  </div>
+
+<script>
+function displayTemporaryMessage(message, type = 'blue') {
+  const container = document.getElementById('messageBoxContainer');
+  const colorClasses = {
+    'green': 'bg-green-100 border-green-400 text-green-700',
+    'red': 'bg-red-100 border-red-400 text-red-700',
+    'blue': 'bg-blue-100 border-blue-400 text-blue-700'
+  };
+  const msgEl = document.createElement('div');
+  msgEl.className = `fixed bottom-4 right-4 z-50 p-4 rounded-xl shadow-lg border-l-4 ${colorClasses[type]} transition-opacity duration-300`;
+  msgEl.textContent = message;
+  container.appendChild(msgEl);
+  setTimeout(() => {
+    msgEl.classList.add('opacity-0');
+    setTimeout(() => msgEl.remove(), 300);
+  }, 3000);
+}
+const API = (path, opts={}) => {
+  const BASE_URL = localStorage.API_BASE || "http://localhost:5000";
+  return fetch(BASE_URL + path, opts).catch(err => {
+    displayTemporaryMessage("Could not reach the API server.", "red");
+    throw err;
+  });
+};
+
+// Dynamic batches are populated from DB; no static cohort mapping
+
+document.getElementById("addStudent").onclick = async () => {
+  const createBtn = document.getElementById("addStudent");
+  createBtn.disabled = true;
+  createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  const nameEl = document.getElementById("sname");
+  const rollEl = document.getElementById("sroll");
+  const classEl = document.getElementById("sclass");
+  const passEl = document.getElementById("spassword");
+  const batchEl = document.getElementById("sbatch");
+  const body = {
+    name: nameEl.value.trim(),
+    rollNo: rollEl.value.trim(),
+    className: classEl.value.trim(),
+    password: passEl.value.trim(),
+    batchStartYear: batchEl.value ? parseInt(batchEl.value, 10) : undefined
+  };
+  if (!body.name || !body.rollNo || !body.className || !body.password || !batchEl.value) {
+    displayTemporaryMessage("Please fill all student fields including password.", 'red');
+    createBtn.disabled = false;
+    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    return;
+  }
+  try {
+    const res = await API("/api/students", { 
+      method:"POST", 
+      headers:{ "Content-Type":"application/json" }, 
+      body: JSON.stringify(body) 
+    });
+    if (res.ok) {
+      displayTemporaryMessage(`Student ${body.name} added successfully!`, 'green');
+      nameEl.value = ''; rollEl.value = ''; classEl.value = ''; passEl.value = ''; batchEl.value = '';
+      loadStudents();
+    } else {
+      const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+      throw new Error(`Failed to add student: ${errorData.message || errorData.error || res.statusText}`);
+    }
+  } catch (error) {
+    displayTemporaryMessage(error.message, 'red');
+  } finally {
+    createBtn.disabled = false;
+    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+};
+document.getElementById("addTeacher").onclick = async () => {
+  const createBtn = document.getElementById("addTeacher");
+  createBtn.disabled = true;
+  createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  const nameEl = document.getElementById("tname");
+  const emailEl = document.getElementById("temail");
+  const passEl = document.getElementById("tpassword");
+  const body = {
+    name: nameEl.value.trim(),
+    email: emailEl.value.trim(),
+    password: passEl.value.trim()
+  };
+  if (!body.name || !body.email || !body.password) {
+    displayTemporaryMessage("Please fill all teacher fields including password.", 'red');
+    createBtn.disabled = false;
+    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    return;
+  }
+  try {
+    const res = await API("/api/teachers", { 
+      method:"POST", 
+      headers:{ "Content-Type":"application/json" }, 
+      body: JSON.stringify(body) 
+    });
+    if (res.ok) {
+      displayTemporaryMessage(`Teacher ${body.name} added successfully!`, 'green');
+      nameEl.value = ''; emailEl.value = ''; passEl.value = '';
+      loadTeachers();
+    } else {
+      const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+      throw new Error(`Failed to add teacher: ${errorData.message || errorData.error || res.statusText}`);
+    }
+  } catch (error) {
+    displayTemporaryMessage(error.message, 'red');
+  } finally {
+    createBtn.disabled = false;
+    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+};
+
+async function loadStudents(){
+  const box = document.getElementById("studentsTable");
+  box.innerHTML = '<div class="text-center text-gray-400 py-4">Fetching data...</div>';
+  try {
+    const res = await API("/api/students");
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+      throw new Error(`Failed to fetch student list: ${errorData.error || res.statusText}`);
+    }
+    const data = await res.json();
+
+    // No batch filter dropdown
+
+    // Apply search only
+    const q = (document.getElementById('studentSearch').value || '').toLowerCase();
+    const filtered = data.filter(s => !q || (s.name||'').toLowerCase().includes(q) || (s.rollNo||'').toLowerCase().includes(q));
+
+    box.innerHTML = "";
+    if (filtered.length === 0) {
+      box.innerHTML = '<div class="text-center text-gray-500 py-4">No students found.</div>';
+      return;
+    }
+    filtered.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow";
+      row.innerHTML = `
+        <div class="min-w-0 flex-1 pr-4">
+          <div class="font-semibold text-gray-800 truncate">${s.name} <span class="text-sm text-gray-400">(${s.rollNo||"-"})</span></div>
+          <div class="text-sm text-gray-500 mt-0.5 flex flex-wrap items-center gap-3">
+            <span>Class: <span class="font-medium text-gray-700">${s.className||"-"}</span></span>
+            <span class="text-gray-300">|</span>
+            <span>Batch: <span class="font-medium text-gray-700">${s.batchStartYear ? `${s.batchStartYear}-${(s.batchStartYear+1)}` : "-"}</span></span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button data-del="${s._id}" class="px-4 py-1.5 rounded-xl bg-red-600 text-white font-medium shadow-sm hover:bg-red-700 transition-all transform active:scale-95 text-sm whitespace-nowrap">
+            Delete
+          </button>
+        </div>`;
+      row.addEventListener("click", async (e)=>{
+        const btn = e.target.closest("button[data-del]");
+        if(!btn) return;
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        try {
+          const deleteRes = await API("/api/students/"+btn.dataset.del, { method:"DELETE" });
+          if (deleteRes.ok) {
+            displayTemporaryMessage(`Student deleted successfully.`, 'green');
+            loadStudents(); // Refresh the list
+          } else {
+            const errorData = await deleteRes.json().catch(() => ({ error: "Unknown server error" }));
+            throw new Error(`Failed to delete student: ${errorData.error || deleteRes.statusText}`);
+          }
+        } catch (error) {
+          displayTemporaryMessage(error.message, 'red');
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      });
+      box.appendChild(row);
+    });
+  } catch (error) {
+    box.innerHTML = '<div class="text-center text-red-500 py-4">Error loading students. Check console.</div>';
+  }
+}
+
+async function loadTeachers(){
+  const box = document.getElementById("teachersTable");
+  box.innerHTML = '<div class="text-center text-gray-400 py-4">Fetching data...</div>';
+  try {
+    const res = await API("/api/teachers");
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: "Unknown server error" }));
+      throw new Error(`Failed to fetch teacher list: ${errorData.error || res.statusText}`);
+    }
+    const data = await res.json();
+    const q = (document.getElementById('teacherSearch').value || '').toLowerCase();
+    const filtered = data.filter(t => !q || (t.name||'').toLowerCase().includes(q) || (t.email||'').toLowerCase().includes(q));
+    box.innerHTML = "";
+    if (filtered.length === 0) {
+      box.innerHTML = '<div class="text-center text-gray-500 py-4">No teachers found.</div>';
+      return;
+    }
+    filtered.forEach(t => {
+      const row = document.createElement("div");
+      row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow";
+      row.innerHTML = `
+        <div class="min-w-0 flex-1 pr-4">
+          <div class="font-semibold text-gray-800 truncate">${t.name}</div>
+          <div class="text-sm text-gray-500 mt-0.5">${t.email||"-"}</div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button data-del="${t._id}" class="px-4 py-1.5 rounded-xl bg-red-600 text-white font-medium shadow-sm hover:bg-red-700 transition-all transform active:scale-95 text-sm whitespace-nowrap">
+            Delete
+          </button>
+        </div>`;
+      row.addEventListener("click", async (e)=>{
+        const btn = e.target.closest("button[data-del]");
+        if(!btn) return;
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        try {
+          const deleteRes = await API("/api/teachers/"+btn.dataset.del, { method:"DELETE" });
+          if (deleteRes.ok) {
+            displayTemporaryMessage(`Teacher deleted successfully.`, 'green');
+            loadTeachers();
+          } else {
+            const errorData = await deleteRes.json().catch(() => ({ error: "Unknown server error" }));
+            throw new Error(`Failed to delete teacher: ${errorData.error || deleteRes.statusText}`);
+          }
+        } catch (error) {
+          displayTemporaryMessage(error.message, 'red');
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      });
+      box.appendChild(row);
+    });
+  } catch (error) {
+    box.innerHTML = '<div class="text-center text-red-500 py-4">Error loading teachers. Check console.</div>';
+  }
+}
+
+document.getElementById("refreshStudents").onclick = loadStudents;
+document.getElementById("refreshTeachers").onclick = loadTeachers;
+document.getElementById('teacherSearch').addEventListener('input', loadTeachers);
+document.getElementById('studentSearch').addEventListener('input', loadStudents);
+loadStudents();
+loadTeachers();
+</script>
+</body>
+</html>
