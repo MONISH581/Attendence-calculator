@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Teacher Panel — Sri Shakthi Institute</title>
+  <title>Teacher Panel — Myshakthiview Digital Attendance</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -29,7 +29,7 @@
   <div class="dashboard-header shadow-2xl">
     <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between">
       <div class="mb-6 sm:mb-0">
-        <h1 class="dashboard-title">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+        <h1 class="dashboard-title">Myshakthiview — Digital Attendance</h1>
         <div class="dashboard-institute">Teacher Attendance Management Panel</div>
       </div>
       <div class="text-center sm:text-right bg-white/20 rounded-xl shadow-inner p-3">
@@ -175,7 +175,6 @@ function updateSubjectOptionsForCurrentFilters(){
   // Subject catalog by cohort -> semester -> department
   const SUBJECTS = {
     first: {
-      // First year example per request
       1: { CSE: ['HTML','JAVA','MATHS'] },
       2: { CSE: ['HTML','JAVA','MATHS'] }
     },
@@ -226,18 +225,12 @@ const COHORTS = {
 
 function populateSessionsForCohort(key){
   const cfg = COHORTS[key] || COHORTS.first;
-  // Academic Session remains fixed globally (2025-2026)
-  // Set default semester based on cohort selection only
   semEl.value = `${cfg.startSem} Semester`;
 }
 
 yearCohortEl.addEventListener('change', () => {
   populateSessionsForCohort(yearCohortEl.value);
 });
-
-// Academic session is fixed; no session-based semester changes
-
-// Initialize cohort/session/semester on load based on selected cohort
 populateSessionsForCohort(yearCohortEl.value);
 
 async function load(){
@@ -251,7 +244,6 @@ async function load(){
     const deptQuery = (deptEl.value || "").toLowerCase();
     const sectionQuery = (sectionEl.value || "").toLowerCase();
     const cohortKey = yearCohortEl.value;
-    // Update subject options to reflect current department/section selection
     updateSubjectOptionsForCurrentFilters();
 
     function inferBatchStartYear(st){

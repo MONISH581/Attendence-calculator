@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel — Sri Shakthi Institute</title>
+  <title>Admin Panel — Myshakthiview Digital Attendance</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -42,7 +42,7 @@
     <div class="dashboard-header shadow-2xl">
       <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 flex items-center justify-between">
         <div>
-          <h1 class="dashboard-title">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+          <h1 class="dashboard-title">Myshakthiview — Digital Attendance</h1>
           <div class="dashboard-institute">Admin Panel — Manage Students and Teachers</div>
         </div>
       </div>
@@ -146,8 +146,6 @@ const API = (path, opts={}) => {
   });
 };
 
-// Dynamic batches are populated from DB; no static cohort mapping
-
 document.getElementById("addStudent").onclick = async () => {
   const createBtn = document.getElementById("addStudent");
   createBtn.disabled = true;
@@ -242,9 +240,6 @@ async function loadStudents(){
     }
     const data = await res.json();
 
-    // No batch filter dropdown
-
-    // Apply search only
     const q = (document.getElementById('studentSearch').value || '').toLowerCase();
     const filtered = data.filter(s => !q || (s.name||'').toLowerCase().includes(q) || (s.rollNo||'').toLowerCase().includes(q));
 
@@ -279,7 +274,7 @@ async function loadStudents(){
           const deleteRes = await API("/api/students/"+btn.dataset.del, { method:"DELETE" });
           if (deleteRes.ok) {
             displayTemporaryMessage(`Student deleted successfully.`, 'green');
-            loadStudents(); // Refresh the list
+            loadStudents();
           } else {
             const errorData = await deleteRes.json().catch(() => ({ error: "Unknown server error" }));
             throw new Error(`Failed to delete student: ${errorData.error || deleteRes.statusText}`);
