@@ -17,25 +17,20 @@
     }
   </style>
 
-  <!--
-    CONFIG: Set PROD_BACKEND to your deployed backend URL (include https://)
-    Example: const PROD_BACKEND = 'https://my-backend.onrender.com'
-  -->
   <script>
     (function () {
-      // <-- REPLACE this with your REAL backend URL BEFORE COMMIT -->
-      const PROD_BACKEND = 'https://your-backend-domain.com';
+      // PROD backend (set to your backend URL)
+      const PROD_BACKEND = 'https://attendence-calculator-mocha.vercel.app';
 
-      // If running on your Vercel production hostname, use PROD_BACKEND.
-      // Otherwise fall back to localhost for local dev.
+      // Vercel hostnames for your frontend (your site)
       const VERCEL_HOSTS = [
-        'attendence-calculator-wjwm.vercel.app',
-        'www.attendence-calculator-wjwm.vercel.app'
+        'attendence-calculator-git-main-monishs-projects-e702aa3f.vercel.app',
+        'www.attendence-calculator-git-main-monishs-projects-e702aa3f.vercel.app'
       ];
 
       const hostname = window.location.hostname;
       window.API_BASE = VERCEL_HOSTS.includes(hostname) ? PROD_BACKEND : 'http://localhost:5000';
-      // (You can open console and check: window.API_BASE)
+      // Quick debug: open console and check window.API_BASE
     })();
   </script>
 </head>
@@ -137,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Use global API_BASE set in head script
     const base = window.API_BASE || 'http://localhost:5000';
     let endpoint, payload;
     if (currentRole === 'student') {
@@ -163,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const resp = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(resp.message || 'Login failed');
 
-      // store minimal user info in localStorage (avoid storing secrets)
       localStorage.setItem('userId', resp.userId);
       localStorage.setItem('userRole', resp.role);
       localStorage.setItem('userName', resp.name);
