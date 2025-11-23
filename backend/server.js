@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const path = require("path");
 const express = require("express");
@@ -6,7 +5,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
+
+// --- SET CORS FOR YOUR DEPLOYED FRONTEND ---
+app.use(cors({
+  origin: 'https://attendence-calculator-wjwm.vercel.app',
+  credentials: true // Only needed if you use cookies/auth
+}));
+// --------------------------------------------
+
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/attendanceApp";
@@ -28,7 +34,6 @@ app.use("/api/students", require("./routes/studentRoutes"));
 app.use("/api/teachers", require("./routes/teacherRoutes"));
 app.use("/api/admins", require("./routes/adminRoutes"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
-
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 5000;
