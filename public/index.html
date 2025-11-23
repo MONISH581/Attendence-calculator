@@ -8,7 +8,6 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #f9fafb;}
-    /* Responsive padding and font size for login role buttons */
     @media (max-width: 400px) {
       #login-app .role-btn {
         padding-left: 0.5rem;
@@ -17,6 +16,28 @@
       }
     }
   </style>
+
+  <!--
+    CONFIG: Set PROD_BACKEND to your deployed backend URL (include https://)
+    Example: const PROD_BACKEND = 'https://my-backend.onrender.com'
+  -->
+  <script>
+    (function () {
+      // <-- REPLACE this with your REAL backend URL BEFORE COMMIT -->
+      const PROD_BACKEND = 'https://your-backend-domain.com';
+
+      // If running on your Vercel production hostname, use PROD_BACKEND.
+      // Otherwise fall back to localhost for local dev.
+      const VERCEL_HOSTS = [
+        'attendence-calculator-wjwm.vercel.app',
+        'www.attendence-calculator-wjwm.vercel.app'
+      ];
+
+      const hostname = window.location.hostname;
+      window.API_BASE = VERCEL_HOSTS.includes(hostname) ? PROD_BACKEND : 'http://localhost:5000';
+      // (You can open console and check: window.API_BASE)
+    })();
+  </script>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
   <div id="login-app" class="w-full max-w-md">
@@ -26,7 +47,6 @@
         <p class="text-gray-500 mt-2">Unified Portal — Please sign in</p>
       </header>
       <div class="mb-6 flex space-x-2 p-1 bg-gray-100 rounded-full">
-        <!-- Improved: uniform padding and role-btn class for all -->
         <button id="roleStudent" class="role-btn flex-1 px-4 py-2 text-sm font-semibold rounded-full bg-sky-600 text-white shadow-md transition-colors duration-200">Student Login</button>
         <button id="roleTeacher" class="role-btn flex-1 px-4 py-2 text-sm font-semibold rounded-full text-gray-700 hover:bg-sky-100 hover:text-sky-700 transition-colors duration-200">Teacher Login</button>
         <button id="roleAdmin" class="role-btn flex-1 px-4 py-2 text-sm font-semibold rounded-full text-gray-700 hover:bg-sky-100 hover:text-sky-700 transition-colors duration-200">Admin Login</button>
@@ -43,6 +63,7 @@
       <div id="messageBoxContainer"></div>
     </div>
   </div>
+
 <script>
 function displayTemporaryMessage(message, type = 'blue') {
   const container = document.getElementById('messageBoxContainer');
@@ -75,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function switchRole(role) {
     currentRole = role;
-    // Remove active styling from all, add to selected
     allRoleBtns.forEach(b => {
       b.classList.remove('bg-sky-600', 'text-white', 'shadow-md');
       b.classList.add('text-gray-700');
@@ -116,28 +136,38 @@ document.addEventListener('DOMContentLoaded', () => {
       loginButton.classList.remove('opacity-50', 'cursor-not-allowed');
       return;
     }
+
+    // Use global API_BASE set in head script
+    const base = window.API_BASE || 'http://localhost:5000';
     let endpoint, payload;
     if (currentRole === 'student') {
-      endpoint = 'http://localhost:5000/api/students/login';
+      endpoint = `${base}/api/students/login`;
       payload = { rollNo: identifier, password };
     } else if (currentRole === 'teacher') {
-      endpoint = 'http://localhost:5000/api/teachers/login';
+      endpoint = `${base}/api/teachers/login`;
       payload = { email: identifier, password };
     } else if (currentRole === 'admin' || currentRole === 'superadmin') {
-      endpoint = 'http://localhost:5000/api/admins/login';
+      endpoint = `${base}/api/admins/login`;
       payload = { email: identifier, password };
     }
+
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // If your backend uses cookie-based sessions, uncomment the next line:
+        // credentials: 'include',
         body: JSON.stringify(payload)
       });
+
       const resp = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(resp.message || 'Login failed');
+
+      // store minimal user info in localStorage (avoid storing secrets)
       localStorage.setItem('userId', resp.userId);
       localStorage.setItem('userRole', resp.role);
       localStorage.setItem('userName', resp.name);
+
       displayTemporaryMessage('Login successful. Redirecting...', 'green');
       setTimeout(() => {
         if (resp.role === 'admin') window.location.href = './admin.html';
