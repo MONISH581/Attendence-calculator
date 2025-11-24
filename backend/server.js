@@ -28,7 +28,7 @@ mongoose
 
 // --- Redirect root to login page ---
 app.get("/", (req, res) => {
-  res.redirect("/login.html");
+  res.redirect("/index.html");
 });
 
 // Serve static files from public folder
